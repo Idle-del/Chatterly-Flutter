@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "190247290544",
+    "project_id": "chatterly-3b030",
+    "storage_bucket": "chatterly-3b030.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190247290544:android:1c4fb0fa4b73430a4c9d75",
+        "android_client_info": {
+          "package_name": "com.example.my_chat_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCNpM19dGj71G_eTvY1vao8PgQFK25KRY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
