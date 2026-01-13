@@ -215,13 +215,47 @@ class _ChatScreenState extends State<ChatScreen> {
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 16,
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 12,
+                                  // CircleAvatar(
+                                  //   radius: 16,
+                                  //   child: Icon(
+                                  //     Icons.person,
+                                  //     color: Colors.white,
+                                  //     size: 12,
+                                  //   ),
+                                  // ),
+                                  FutureBuilder<String?>(
+                                    future: avatarCache.putIfAbsent(
+                                      widget.otherId,
+                                      () => fetchPublicUserImageForUid(
+                                        widget.otherId,
+                                      ),
                                     ),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        );
+                                      }
+                                      if (!snapshot.hasData ||
+                                          snapshot.data == null) {
+                                        return CircleAvatar(
+                                          backgroundColor: Colors.grey,
+                                          child: Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                          ),
+                                        );
+                                      }
+                                      return CircleAvatar(
+                                        radius: 16,
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                              snapshot.data!,
+                                            ),
+                                      );
+                                    },
                                   ),
                                   SizedBox(width: 10),
                                   Container(
