@@ -1,9 +1,13 @@
 // ignore_for_file: prefer_final_fields, use_build_context_synchronously, avoid_print
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:my_chat_app/controller/user_controller.dart';
 import 'package:my_chat_app/login/signup/signup_screen.dart';
 import 'package:my_chat_app/screens/home_screen.dart';
+import 'package:my_chat_app/services/remote_services.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isEmailValid = true;
   bool _isPasswordValid = true;
+
+  final userController = Get.find<UserController>();
 
   @override
   void dispose() {
@@ -48,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     TextEditingController controller,
     bool isValid,
     String errormsg,
-    bool isDark
+    bool isDark,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
             color: isDark ? Colors.grey[900] : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isValid ? Colors.purple[500]! : isDark ? Colors.redAccent : Colors.red,
+              color: isValid
+                  ? Colors.purple[500]!
+                  : isDark
+                  ? Colors.redAccent
+                  : Colors.red,
               width: 2,
             ),
           ),
@@ -93,6 +103,14 @@ class _LoginScreenState extends State<LoginScreen> {
           if (!mounted) return;
           _emailController.clear();
           _passwordController.clear();
+
+          userController.setProfileImageUrl(null);
+
+          String? imageUrl = await fetchUserImageUrl();
+          if (imageUrl != null && mounted) {
+            userController.setProfileImageUrl(imageUrl);
+            precacheImage(CachedNetworkImageProvider(imageUrl), context);
+          }
 
           ScaffoldMessenger.of(
             context,
@@ -135,7 +153,10 @@ class _LoginScreenState extends State<LoginScreen> {
               buildTextField(
                 'Email',
                 false,
-                Icon(Icons.email, color: isDark ? Colors.purpleAccent : Colors.purple[800]),
+                Icon(
+                  Icons.email,
+                  color: isDark ? Colors.purpleAccent : Colors.purple[800],
+                ),
                 _emailController,
                 _isEmailValid,
                 'Please enter a valid email address',
@@ -144,11 +165,14 @@ class _LoginScreenState extends State<LoginScreen> {
               buildTextField(
                 'Password',
                 true,
-                Icon(Icons.lock, color: isDark ? Colors.purpleAccent : Colors.purple[800]),
+                Icon(
+                  Icons.lock,
+                  color: isDark ? Colors.purpleAccent : Colors.purple[800],
+                ),
                 _passwordController,
                 _isPasswordValid,
                 'Password must be at least 8 characters long',
-                isDark
+                isDark,
               ),
 
               SizedBox(height: 20),

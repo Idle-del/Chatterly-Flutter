@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:my_chat_app/services/remote_services.dart';
 
 class ChatScreen extends StatefulWidget {
   final String myId;
@@ -20,8 +22,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   late final String chatId;
+  static final Map<String, Future<String?>> avatarCache = {};
 
-  // Generate consistent chat ID
   String _getChatId(String id1, String id2) {
     if (id1.compareTo(id2) > 0) {
       return '${id1}_$id2';
@@ -37,7 +39,6 @@ class _ChatScreenState extends State<ChatScreen> {
     _ensureChatExists();
   }
 
-  // Ensure chat document exists BEFORE streaming messages
   Future<void> _ensureChatExists() async {
     final chatRef = FirebaseFirestore.instance.collection('chats').doc(chatId);
 
@@ -53,7 +54,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final chatRef = FirebaseFirestore.instance.collection('chats').doc(chatId);
 
-    // Update chat metadata
+    // Update chat data
     await chatRef.set({
       'participants': [widget.myId, widget.otherId],
       'lastMessage': _messageController.text,
@@ -71,7 +72,6 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.clear();
   }
 
-  // Message stream
   Stream<QuerySnapshot> _getMessages() {
     return FirebaseFirestore.instance
         .collection('chats')
@@ -89,19 +89,44 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         backgroundColor: isDark ? Colors.grey[900]! : Colors.white,
         leadingWidth: 40,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: isDark ? Colors.white : Colors.black,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
         ),
         title: GestureDetector(
           child: Row(
             children: [
-              CircleAvatar(child: Icon(Icons.person, color: Colors.white)),
+              FutureBuilder<String?>(
+                future: avatarCache.putIfAbsent(
+                  widget.otherId,
+                  () => fetchPublicUserImageForUid(widget.otherId),
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    );
+                  }
+                  if (!snapshot.hasData || snapshot.data == null) {
+                    return CircleAvatar(
+                      backgroundColor: Colors.grey,
+                      child: Icon(Icons.person, color: Colors.white),
+                    );
+                  }
+                  return CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(snapshot.data!),
+                  );
+                },
+              ),
               SizedBox(width: 15),
               Expanded(
                 child: Text(
@@ -116,6 +141,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ],
           ),
+          onTap: () {},
         ),
         actions: [
           IconButton(
@@ -168,10 +194,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   }
 
                   final messages = snapshot.data!.docs;
-
-                  // if (messages.isEmpty) {
-                  //   return const Center(child: Text('Say hi 👋'));
-                  // }
 
                   return ListView.builder(
                     reverse: true,

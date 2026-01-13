@@ -1,8 +1,12 @@
 // ignore_for_file: avoid_print
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:my_chat_app/controller/user_controller.dart';
+import 'package:my_chat_app/screens/profiles/view_profile.dart';
 
 class ProfileEdit extends StatefulWidget {
   const ProfileEdit({super.key});
@@ -17,6 +21,8 @@ class _ProfileEditState extends State<ProfileEdit> {
   final FocusNode _fullNameFocusNode = FocusNode();
   final FocusNode _bioFocusNode = FocusNode();
   final user = FirebaseAuth.instance.currentUser!;
+
+  final userController = Get.find<UserController>();
 
   bool isEditingName = false;
   bool isEditingBio = false;
@@ -36,6 +42,7 @@ class _ProfileEditState extends State<ProfileEdit> {
           .collection('users')
           .doc(uid)
           .get();
+      if (!mounted) return;
       if (userDoc.exists) {
         final userData = userDoc.data()!;
         setState(() {
@@ -60,25 +67,45 @@ class _ProfileEditState extends State<ProfileEdit> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.visibility),
-              title: const Text('View profile picture'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Update profile picture'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
+        return userController.profileImageUrl != null
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.visibility),
+                    title: const Text('View profile picture'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ViewProfileImage(
+                            imageUrl: userController.profileImageUrl!,
+                            isDark: isDark,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt),
+                    title: const Text('Update profile picture'),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt),
+                    title: const Text('Add profile picture'),
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ],
+              );
       },
     );
   }
@@ -98,8 +125,7 @@ class _ProfileEditState extends State<ProfileEdit> {
                   child: Center(
                     child: Column(
                       children: [
-                        const SizedBox(height: 20),
-
+                        // const SizedBox(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
@@ -126,9 +152,24 @@ class _ProfileEditState extends State<ProfileEdit> {
 
                         GestureDetector(
                           onTap: () => showProfileOptions(context, isDark),
-                          child: const CircleAvatar(
-                            radius: 60,
-                            child: Icon(Icons.person, size: 60),
+                          child: GetBuilder<UserController>(
+                            builder: (controller) => CircleAvatar(
+                              radius: 60,
+                              backgroundColor: Colors.grey[300],
+                              backgroundImage:
+                                  controller.profileImageUrl != null
+                                  ? CachedNetworkImageProvider(
+                                      controller.profileImageUrl!,
+                                    )
+                                  : null,
+                              child: controller.profileImageUrl == null
+                                  ? Icon(
+                                      Icons.person,
+                                      size: 60,
+                                      color: Colors.white,
+                                    )
+                                  : null,
+                            ),
                           ),
                         ),
 
@@ -145,25 +186,6 @@ class _ProfileEditState extends State<ProfileEdit> {
                                 isDark: isDark,
                                 focusNode: _fullNameFocusNode,
                                 onEditChanged: () {
-                                  // if(!isEditingName) {
-                                  //   setState(() {
-                                  //   isEditingName = true;
-                                  // });
-                                  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-                                  //     _fullNameFocusNode.requestFocus();
-                                  //   }
-                                  //   );
-                                  // }else{
-                                  // FirebaseFirestore.instance
-                                  //     .collection('users')
-                                  //     .doc(user.uid)
-                                  //     .update({'username': _fullNameController.text});
-                                  // FocusScope.of(context).unfocus();
-                                  // setState(() {
-                                  //   isEditingName = false;
-                                  // });
-                                  // }
-
                                   setState(() {
                                     isEditingName = !isEditingName;
                                   });

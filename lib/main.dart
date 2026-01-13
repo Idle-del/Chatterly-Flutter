@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:my_chat_app/controller/theme_controller.dart';
+import 'package:my_chat_app/controller/user_controller.dart';
 import 'package:my_chat_app/user_auth/auth_gate.dart';
 import 'package:my_chat_app/utils/app_themes.dart';
 
@@ -12,6 +13,7 @@ void main() async {
 
   await GetStorage.init();
   Get.put(ThemeController());
+  Get.put(UserController(), permanent: true);
   runApp(const MyApp());
 }
 
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
-    
+
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),

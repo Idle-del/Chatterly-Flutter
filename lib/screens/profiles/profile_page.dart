@@ -1,11 +1,15 @@
 // ignore_for_file: use_build_context_synchronously, sort_child_properties_last
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:my_chat_app/controller/theme_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:my_chat_app/screens/profile_edit.dart';
+import 'package:my_chat_app/controller/user_controller.dart';
+import 'package:my_chat_app/screens/profiles/profile_edit.dart';
 import 'package:my_chat_app/screens/start_screen.dart';
+import 'package:my_chat_app/services/remote_services.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,8 +22,21 @@ class _ProfilePageState extends State<ProfilePage> {
   final _auth = FirebaseAuth.instance;
   final _userinfo = FirebaseFirestore.instance.collection('users');
 
+  final userController = Get.find<UserController>();
+
+  @override
+  void initState() {
+    super.initState();
+    if (userController.profileImageUrl == null) {
+      fetchUserImageUrl().then((url) {
+        userController.setProfileImageUrl(url);
+      });
+    }
+  }
+
   // Logout function
   void _logout() async {
+    userController.setProfileImageUrl(null);
     await _auth.signOut();
     Navigator.pushAndRemoveUntil(
       context,
@@ -90,16 +107,41 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         body: Stack(
           children: [
-            // Main content
             Center(
               child: Column(
                 children: [
                   SizedBox(height: 50),
 
-                  CircleAvatar(
-                    radius: 50,
-                    child: Icon(Icons.person, color: Colors.white, size: 50),
+                  GetBuilder<UserController>(
+                    builder: (controller) {
+                      return CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey[300],
+                        child: controller.profileImageUrl == null
+                            ? Icon(Icons.person, size: 50, color: Colors.white)
+                            : ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: controller.profileImageUrl!,
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.purple,
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                      );
+                    },
                   ),
+
                   const SizedBox(height: 20),
                   StreamBuilder<QuerySnapshot>(
                     stream: _userinfo
