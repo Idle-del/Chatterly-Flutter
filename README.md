@@ -36,14 +36,14 @@ Chatterly is a real-time chat application built with **Flutter** and **Firebase*
 
 <h3>Home & Chat</h3>
 <p float="left">
-  <img src="screenshots/home.png" width="300" />
-  <img src="screenshots/chat.png" width="300" />
+  <img src="screenshots/home_v2.png" width="300" />
+  <img src="screenshots/chat_v2.png" width="300" />
 </p>
 
 <h3>Profile & Edit Profile</h3>
 <p float="left">
-  <img src="screenshots/profile.png" width="300" />
-  <img src="screenshots/edit_profile.png" width="300" />
+  <img src="screenshots/profile_v2.png" width="300" />
+  <img src="screenshots/edit_profile_v2.png" width="300" />
 </p>
 
 ---
